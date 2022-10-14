@@ -31,7 +31,7 @@ func (p *PrnParser) parseToHtml() (resHtml string, err error) {
 		return "", fmt.Errorf("PrnParser.scanner == nil. Error is: %v", ErrorNilInParseToHtml)
 	}
 	if len(p.slRanges) == 0 {
-		return "", fmt.Errorf("table can not have zero columns")
+		return "", fmt.Errorf("p.slRanges == nil. Error is %v", ErrorSlRangeEmpty)
 	}
 
 	countIteration := 0
@@ -53,10 +53,10 @@ func (p *PrnParser) parseToHtml() (resHtml string, err error) {
 	buf := bytes.Buffer{}
 	err = p.template.Execute(&buf, slTemplate)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%v in Parse() on PrnParser. Error is: %v", ErrorTemplate, err)
 	}
 	resHtml = buf.String()
 
-	return resHtml, err
+	return resHtml, nil
 
 }

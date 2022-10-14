@@ -15,6 +15,8 @@ import (
 
 const (
 	ErrorNilInParseToHtml = "find nil in parseToHtml()"
+	ErrorSlRangeEmpty     = "table can not have zero columns"
+	ErrorTemplate         = "p.template.Execute not work"
 )
 
 func writeStrToFile(filePath string, target string) error {
@@ -52,7 +54,7 @@ func dataFromFile(filePath string) (res []byte, err error) {
 func scannerFromFile(filePath string) (scanner *bufio.Scanner, err error) {
 	fileBytes, err := dataFromFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error is: %w in scannerFromFile()", err)
+		return nil, fmt.Errorf("%w in scannerFromFile()", err)
 	}
 
 	// Used charmap.ISO8859_1 because data.css and data.prn encoded iso8859-1
@@ -65,7 +67,7 @@ func scannerFromFile(filePath string) (scanner *bufio.Scanner, err error) {
 func regexpFromFile(filePath string) (*regexp.Regexp, error) {
 	fileBytes, err := dataFromFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error is: %w in regexpFromFile()", err)
+		return nil, fmt.Errorf("%w in regexpFromFile()", err)
 	}
 
 	resRegexp, err := regexp.Compile(string(fileBytes))
@@ -79,7 +81,7 @@ func regexpFromFile(filePath string) (*regexp.Regexp, error) {
 func templateFromFile(filePath string) (*template.Template, error) {
 	fileBytes, err := dataFromFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error is: %w in templateFromFile()", err)
+		return nil, fmt.Errorf("%w in templateFromFile()", err)
 	}
 
 	resTemplate := template.New("templateMain")
@@ -96,12 +98,12 @@ func Parse(filePath string) error {
 
 	scanner, err := scannerFromFile(filePath)
 	if err != nil {
-		return fmt.Errorf("error is: %w in Parse()", err)
+		return fmt.Errorf("%w in Parse()", err)
 	}
 
 	templateMain, err := templateFromFile("template_source/template_main")
 	if err != nil {
-		return fmt.Errorf("error is: %w in Parse()", err)
+		return fmt.Errorf("%w in Parse()", err)
 	}
 
 	ext := filepath.Ext(filePath)
@@ -109,12 +111,12 @@ func Parse(filePath string) error {
 	case ".csv":
 		regexpHeader, err := regexpFromFile("regexp_source/regexp_Header")
 		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
+			return fmt.Errorf("%w in Parse() case(csv)", err)
 		}
 
 		regexpMain, err := regexpFromFile("regexp_source/regexp_Main")
 		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
+			return fmt.Errorf("%w in Parse() case(csv)", err)
 		}
 
 		parserCsv := CsvParser{regexpMain: regexpMain,
@@ -123,7 +125,7 @@ func Parse(filePath string) error {
 			template:     templateMain}
 		resHtml, err = parserCsv.parseToHtml()
 		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
+			return fmt.Errorf("%w in Parse() case(csv)", err)
 		}
 
 	case ".prn":
@@ -141,7 +143,7 @@ func Parse(filePath string) error {
 		}
 		resHtml, err = parserPrn.parseToHtml()
 		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
+			return fmt.Errorf("%w in Parse() case(prn)", err)
 		}
 
 	default:
@@ -151,7 +153,7 @@ func Parse(filePath string) error {
 	// Used ext[1:] because in extension first rune is '.'
 	err = writeStrToFile(fmt.Sprintf("result_html/%v_table.html", ext[1:]), resHtml)
 	if err != nil {
-		return fmt.Errorf("error is: %w in writeStrToFile() in Parse()", err)
+		return fmt.Errorf("%w in writeStrToFile() in Parse()", err)
 	}
 
 	return nil

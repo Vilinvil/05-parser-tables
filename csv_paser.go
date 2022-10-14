@@ -60,9 +60,9 @@ func (c *CsvParser) parseToHtml() (resHtml string, err error) {
 	buf := bytes.Buffer{}
 	err = c.template.Execute(&buf, slTemplate)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%v in Parse() on CsvParser. Error is: %v", ErrorTemplate, err)
 	}
 	resHtml = buf.String()
 
-	return resHtml, err
+	return resHtml, nil
 }
