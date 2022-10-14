@@ -145,9 +145,10 @@ func Parse(filePath string) error {
 		return fmt.Errorf("func Parse can handle 'csv' and 'prn' files, extension %v is not implemented", ext)
 	}
 
-	err = writeStrToFile("result_html/prn_table.html", resHtml)
+	// Used ext[1:] because in extension first rune is '.'
+	err = writeStrToFile(fmt.Sprintf("result_html/%v_table.html", ext[1:]), resHtml)
 	if err != nil {
-		return fmt.Errorf("error is: %w in Parse()", err)
+		return fmt.Errorf("error is: %w in writeStrToFile() in Parse()", err)
 	}
 
 	return nil
