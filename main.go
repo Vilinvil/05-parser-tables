@@ -106,7 +106,7 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		templateMain, err := tmplateFromFile("template_source/template_main")
+		templateMain, err := tmplateFromFile("template_source/template_csv")
 		if err != nil {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
