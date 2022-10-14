@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"html/template"
 	"strings"
 )
@@ -20,6 +21,19 @@ type PrnParser struct {
 }
 
 func (p *PrnParser) parseToHtml() (resHtml string, err error) {
+	if p == nil {
+		return "", fmt.Errorf("PrnParser == nil. Error is: %v", ErrorNilInParseToHtml)
+	}
+	if p.template == nil {
+		return "", fmt.Errorf("PrnParser.template == nil. Error is: %v", ErrorNilInParseToHtml)
+	}
+	if p.scanner == nil {
+		return "", fmt.Errorf("PrnParser.scanner == nil. Error is: %v", ErrorNilInParseToHtml)
+	}
+	if len(p.slRanges) == 0 {
+		return "", fmt.Errorf("table can not have zero columns")
+	}
+
 	countIteration := 0
 	slTemplate := make([][]string, 0)
 
@@ -29,13 +43,9 @@ func (p *PrnParser) parseToHtml() (resHtml string, err error) {
 
 		slTemplate = append(slTemplate, []string{})
 
-		for key, val := range p.slRanges {
+		for _, val := range p.slRanges {
 			elText := strings.TrimSpace(string(curSlRune[val.lIndex:val.rIndex]))
-			if key == len(p.slRanges)-2 {
-				slTemplate[countIteration] = append(slTemplate[countIteration], elText)
-			} else {
-				slTemplate[countIteration] = append(slTemplate[countIteration], elText)
-			}
+			slTemplate[countIteration] = append(slTemplate[countIteration], elText)
 		}
 
 		countIteration += 1
