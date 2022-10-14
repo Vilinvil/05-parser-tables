@@ -14,6 +14,10 @@ import (
 	"regexp"
 )
 
+//const (
+//	indAlignRightElem
+//)
+
 func writeStrToFile(filePath string, target string) error {
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -128,7 +132,37 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 	case ".prn":
-		return fmt.Errorf("prn not yet working")
+		slRanges := []columnRange{{0, 16},
+			{16, 38},
+			{38, 47},
+			{47, 63},
+			{63, 74},
+			{74, 82}}
+		scanner, err := scannerFromFile(filePath)
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
+		}
+
+		templateMain, err := templateFromFile("template_source/template_main")
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
+		}
+
+		parserPrn := PrnParser{
+			slRanges: slRanges,
+			scanner:  scanner,
+			template: templateMain,
+		}
+		resHtml, err = parserPrn.parseToHtml()
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
+		}
+
+		err = writeStrToFile("result_html/prn_table.html", resHtml)
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
+		}
+
 	default:
 		return fmt.Errorf("func Parse can handle 'csv' and 'prn' files, extension %v is not implemented", ext)
 	}
@@ -138,6 +172,11 @@ func Parse(filePath string) error {
 
 func main() {
 	err := Parse("./data_source/data.csv")
+	if err != nil {
+		log.Printf("Error is: %+v\n", err)
+		return
+	}
+	err = Parse("./data_source/data.prn")
 	if err != nil {
 		log.Printf("Error is: %+v\n", err)
 		return
