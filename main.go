@@ -70,16 +70,16 @@ func regexpFromFile(filePath string) (*regexp.Regexp, error) {
 	return resRegexp, nil
 }
 
-func tmplateFromFile(filePath string) (*template.Template, error) {
+func templateFromFile(filePath string) (*template.Template, error) {
 	fileBytes, err := dataFromFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error is: %w in tmplateFromFile()", err)
+		return nil, fmt.Errorf("error is: %w in templateFromFile()", err)
 	}
 
 	resTemplate := template.New("templateMain")
 	resTemplate, err = resTemplate.Parse(string(fileBytes))
 	if err != nil {
-		return nil, fmt.Errorf("can`t create template in tmplateFromFile. Error is: %w", err)
+		return nil, fmt.Errorf("can`t create template in templateFromFile. Error is: %w", err)
 	}
 
 	return resTemplate, nil
@@ -106,7 +106,7 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		templateMain, err := tmplateFromFile("template_source/template_csv")
+		templateMain, err := templateFromFile("template_source/template_csv")
 		if err != nil {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
