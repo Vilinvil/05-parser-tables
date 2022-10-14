@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -14,40 +12,118 @@ import (
 	"regexp"
 )
 
+func writeStrToFile(filePath string, target string) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("can`t Create file in writeStrToFile(). Error is: %w", err)
+	}
+
+	_, err = file.WriteString(target)
+	if err != nil {
+		return fmt.Errorf("can`t write in file in writeStrToFile(). Error is: %w", err)
+	}
+
+	return nil
+}
+
+// Used named return values to return error from defer
+func dataFromFile(filePath string) (res []byte, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("can`t open file in dataFromFile(). Error is: %w", err)
+	}
+	defer func() {
+		err = file.Close()
+	}()
+
+	res, err = ioutil.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("can`t ReadAll file in dataFromFile(). Error is: %w", err)
+	}
+
+	return res, nil
+}
+
+func scannerFromFile(filePath string) (scanner *bufio.Scanner, err error) {
+	fileBytes, err := dataFromFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error is: %w in scannerFromFile()", err)
+	}
+
+	reader := bytes.NewReader(fileBytes)
+	scanner = bufio.NewScanner(reader)
+
+	return scanner, nil
+}
+
+func regexpFromFile(filePath string) (*regexp.Regexp, error) {
+	fileBytes, err := dataFromFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error is: %w in regexpFromFile()", err)
+	}
+
+	resRegexp, err := regexp.Compile(string(fileBytes))
+	if err != nil {
+		return nil, fmt.Errorf("can`t Compile regexp from file in regexpFromFile(). Error is: %w", err)
+	}
+
+	return resRegexp, nil
+}
+
+func tmplateFromFile(filePath string) (*template.Template, error) {
+	fileBytes, err := dataFromFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error is: %w in tmplateFromFile()", err)
+	}
+
+	resTemplate := template.New("templateMain")
+	resTemplate, err = resTemplate.Parse(string(fileBytes))
+	if err != nil {
+		return nil, fmt.Errorf("can`t create template in tmplateFromFile. Error is: %w", err)
+	}
+
+	return resTemplate, nil
+}
+
 func Parse(filePath string) error {
+	var resHtml string
+
 	ext := filepath.Ext(filePath)
 	switch ext {
 	case ".csv":
-		regexpHeader, err := regexp.Compile(`(?P<name>.+?)\,(?P<address>.+?)\,(?P<postcode>.+?)\,(?P<mobile>.+?)\,(?P<limit>.+?)\,(?P<birthday>.+)`)
+		regexpHeader, err := regexpFromFile("regexp_source/regexp_Header")
 		if err != nil {
-			return err
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		regexpMain, err := regexp.Compile(`(?P<name>\".+\")\,(?P<address>.+)\,(?P<postcode>.+?)\,(?P<mobile>.+?)\,(?P<limit>.+?)\,(?P<birthday>.+)`)
+		regexpMain, err := regexpFromFile("regexp_source/regexp_Main")
 		if err != nil {
-			return err
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		scanner, err := ScannerFromFile(filePath)
+		scanner, err := scannerFromFile(filePath)
 		if err != nil {
-			return err
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		templateMain := template.Must(template.New("").Parse(`<table>{{range .}}
-	<tr>{{range .}}
-		<td>{{.Text}}{{if .IsNotLast}},{{end}}</td>{{end}}
-	</tr>{{end}}
-</table>`))
+		templateMain, err := tmplateFromFile("template_source/template_main")
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
+		}
 
-		parser := CsvParser{regexpMain: regexpMain,
+		parserCsv := CsvParser{regexpMain: regexpMain,
 			regexpHeader: regexpHeader,
 			scanner:      scanner,
 			template:     templateMain}
-		html, err := parser.parseToHtml()
+		resHtml, err = parserCsv.parseToHtml()
 		if err != nil {
-			return err
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
-		fmt.Print(html)
+
+		err = writeStrToFile("result_html/csv_table.html", resHtml)
+		if err != nil {
+			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
+		}
 	case ".prn":
 		return fmt.Errorf("prn not yet working")
 	default:
@@ -55,27 +131,6 @@ func Parse(filePath string) error {
 	}
 
 	return nil
-}
-
-func ScannerFromFile(filePath string) (scanner *bufio.Scanner, err error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("can`t open file in ScannerFromFile. Error is: %w", err)
-	}
-	defer func() {
-		err = file.Close()
-	}()
-
-	fileBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("can`t ReadAll file in ScannerFromFile. Error is: %w", err)
-	}
-
-	// Use charmap.ISO8859_1.NewDecoder() because the data contains characters in the encoding of the ISO8859_1
-	reader := transform.NewReader(bytes.NewReader(fileBytes), charmap.ISO8859_1.NewDecoder())
-	scanner = bufio.NewScanner(reader)
-
-	return scanner, nil
 }
 
 func main() {

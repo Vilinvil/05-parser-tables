@@ -16,18 +16,12 @@ type CsvParser struct {
 
 func (c *CsvParser) parseToHtml() (resHtml string, err error) {
 	isHeader := true
-
-	// Open file and create scanner on top of it
 	countIteration := 0
-	type TemplateStruct struct {
-		Text      string
-		IsNotLast bool
-	}
-	slTemplate := make([][]TemplateStruct, 0)
+	slTemplate := make([][]string, 0)
 	for c.scanner.Scan() {
-
 		curLine := c.scanner.Text()
-		slTemplate = append(slTemplate, []TemplateStruct{})
+
+		slTemplate = append(slTemplate, []string{})
 		slElemInLine := make([]string, 0)
 
 		if isHeader {
@@ -36,17 +30,10 @@ func (c *CsvParser) parseToHtml() (resHtml string, err error) {
 		} else {
 			slElemInLine = c.regexpMain.FindStringSubmatch(curLine)
 		}
-
 		// Сut out the first element because it's a full regex
 		slElemInLine = slElemInLine[1:]
+		slTemplate[countIteration] = slElemInLine
 
-		for key, val := range slElemInLine {
-			if key == len(slElemInLine)-1 {
-				slTemplate[countIteration] = append(slTemplate[countIteration], TemplateStruct{Text: val, IsNotLast: false})
-			} else {
-				slTemplate[countIteration] = append(slTemplate[countIteration], TemplateStruct{Text: val, IsNotLast: true})
-			}
-		}
 		countIteration += 1
 	}
 	buf := bytes.Buffer{}
