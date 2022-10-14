@@ -1,4 +1,4 @@
-package main
+package vilin_parser
 
 import (
 	"bufio"
@@ -8,10 +8,13 @@ import (
 	"golang.org/x/text/transform"
 	"html/template"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+)
+
+const (
+	ErrorNilInParseToHtml = "find nil in parseToHtml()"
 )
 
 func writeStrToFile(filePath string, target string) error {
@@ -152,17 +155,4 @@ func Parse(filePath string) error {
 	}
 
 	return nil
-}
-
-func main() {
-	err := Parse("./data_source/data.csv")
-	if err != nil {
-		log.Printf("Error is: %+v\n", err)
-		return
-	}
-	err = Parse("./data_source/data.prn")
-	if err != nil {
-		log.Printf("Error is: %+v\n", err)
-		return
-	}
 }

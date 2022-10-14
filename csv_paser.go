@@ -1,4 +1,4 @@
-package main
+package vilin_parser
 
 import (
 	"bufio"
