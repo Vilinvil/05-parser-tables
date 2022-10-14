@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -50,7 +52,8 @@ func scannerFromFile(filePath string) (scanner *bufio.Scanner, err error) {
 		return nil, fmt.Errorf("error is: %w in scannerFromFile()", err)
 	}
 
-	reader := bytes.NewReader(fileBytes)
+	// Used charmap.ISO8859_1 because data.css and data.prn encoded iso8859-1
+	reader := transform.NewReader(bytes.NewReader(fileBytes), charmap.ISO8859_1.NewDecoder())
 	scanner = bufio.NewScanner(reader)
 
 	return scanner, nil
@@ -106,7 +109,7 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		templateMain, err := templateFromFile("template_source/template_csv")
+		templateMain, err := templateFromFile("template_source/template_main")
 		if err != nil {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}

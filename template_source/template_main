@@ -1,3 +1,6 @@
+<head>
+    <meta charset="UTF-8"/>
+</head>
 <table>{{range .}}
 	<tr>{{range .}}
 		<td>{{.}}</td>{{end}}
