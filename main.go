@@ -14,10 +14,6 @@ import (
 	"regexp"
 )
 
-//const (
-//	indAlignRightElem
-//)
-
 func writeStrToFile(filePath string, target string) error {
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -95,6 +91,16 @@ func templateFromFile(filePath string) (*template.Template, error) {
 func Parse(filePath string) error {
 	var resHtml string
 
+	scanner, err := scannerFromFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error is: %w in Parse()", err)
+	}
+
+	templateMain, err := templateFromFile("template_source/template_main")
+	if err != nil {
+		return fmt.Errorf("error is: %w in Parse()", err)
+	}
+
 	ext := filepath.Ext(filePath)
 	switch ext {
 	case ".csv":
@@ -108,16 +114,6 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		scanner, err := scannerFromFile(filePath)
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
-		}
-
-		templateMain, err := templateFromFile("template_source/template_main")
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
-		}
-
 		parserCsv := CsvParser{regexpMain: regexpMain,
 			regexpHeader: regexpHeader,
 			scanner:      scanner,
@@ -127,10 +123,6 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
 		}
 
-		err = writeStrToFile("result_html/csv_table.html", resHtml)
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(csv)", err)
-		}
 	case ".prn":
 		slRanges := []columnRange{{0, 16},
 			{16, 38},
@@ -138,15 +130,6 @@ func Parse(filePath string) error {
 			{47, 63},
 			{63, 74},
 			{74, 82}}
-		scanner, err := scannerFromFile(filePath)
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
-		}
-
-		templateMain, err := templateFromFile("template_source/template_main")
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
-		}
 
 		parserPrn := PrnParser{
 			slRanges: slRanges,
@@ -158,13 +141,13 @@ func Parse(filePath string) error {
 			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
 		}
 
-		err = writeStrToFile("result_html/prn_table.html", resHtml)
-		if err != nil {
-			return fmt.Errorf("error is: %w in Parse() case(prn)", err)
-		}
-
 	default:
 		return fmt.Errorf("func Parse can handle 'csv' and 'prn' files, extension %v is not implemented", ext)
+	}
+
+	err = writeStrToFile("result_html/prn_table.html", resHtml)
+	if err != nil {
+		return fmt.Errorf("error is: %w in Parse()", err)
 	}
 
 	return nil
